@@ -55,8 +55,8 @@ from tensorflow.models.image.cifar10 import cifar10
 
 
 flags = tf.app.flags
-flags.DEFINE_string("data_dir", "/mnt/mnist-data",
-                    "Directory for storing mnist data")
+#flags.DEFINE_string("data_dir", "/mnt/mnist-data",
+#                   "Directory for storing mnist data")
 flags.DEFINE_boolean("download_only", False,
                      "Only perform downloading of data; Do not proceed to "
                      "session preparation, model definition or training")
@@ -75,7 +75,7 @@ flags.DEFINE_integer("hidden_units", 100,
                      "Number of units in the hidden layer of the NN")
 flags.DEFINE_integer("train_steps", 10000,
                      "Number of (global) training steps to perform")
-flags.DEFINE_integer("batch_size", 100, "Training batch size")
+#flags.DEFINE_integer("batch_size", 100, "Training batch size")
 flags.DEFINE_float("learning_rate", 0.01, "Learning rate")
 flags.DEFINE_boolean("sync_replicas", True,
                      "Use the sync_replicas (synchronized replicas) mode, "
@@ -192,7 +192,7 @@ def main(unused_argv):
     #train_op = cifar10.train(loss, global_step)
 
     # Create a saver.
-    saver = tf.train.Saver(tf.all_variables())
+    saver = tf.train.Saver(tf.global_variables())
 
     # Build the summary operation based on the TF collection of Summaries.
     summary_op = tf.merge_all_summaries();
