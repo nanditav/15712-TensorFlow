@@ -41,9 +41,17 @@ import math
 import sys
 import tempfile
 import time
+from datetime import datetime
+import os.path
+import time
 
+import numpy as np
+from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
+
+from tensorflow.models.image.cifar10 import cifar10
+#import tensorflow as tf
+#from tensorflow.examples.tutorials.mnist import input_data
 
 
 flags = tf.app.flags
