@@ -92,11 +92,11 @@ while true; do
   fi
 done
 
-if [[ ${SYNC_REPLICAS} == "1" ]] && [[ EXISTING_SERVERS == "1" ]]; then
-  die "ERROR: --sync_replicas (synchronized-replicas) mode is not fully "\
-"supported under the --existing_servers mode yet."
+#if [[ ${SYNC_REPLICAS} == "1" ]] && [[ EXISTING_SERVERS == "1" ]]; then
+#  die "ERROR: --sync_replicas (synchronized-replicas) mode is not fully "\
+#"supported under the --existing_servers mode yet."
   # TODO(cais): Remove error message once sync_replicas is fully supported.
-fi
+#fi
 
 SYNC_REPLICAS_FLAG=""
 if [[ ${SYNC_REPLICAS} == "1" ]]; then

@@ -47,7 +47,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 
 flags = tf.app.flags
-flags.DEFINE_string("data_dir", "/tmp/mnist-data",
+flags.DEFINE_string("data_dir", "/mnt/mnist-data",
                     "Directory for storing mnist data")
 flags.DEFINE_boolean("download_only", False,
                      "Only perform downloading of data; Do not proceed to "
@@ -56,7 +56,7 @@ flags.DEFINE_integer("task_index", None,
                      "Worker task index, should be >= 0. task_index=0 is "
                      "the master worker task the performs the variable "
                      "initialization ")
-flags.DEFINE_integer("num_gpus", 1,
+flags.DEFINE_integer("num_gpus", 0,
                      "Total number of gpus for each machine."
                      "If you don't use GPU, please set it to '0'")
 flags.DEFINE_integer("replicas_to_aggregate", None,
@@ -69,7 +69,7 @@ flags.DEFINE_integer("train_steps", 200,
                      "Number of (global) training steps to perform")
 flags.DEFINE_integer("batch_size", 100, "Training batch size")
 flags.DEFINE_float("learning_rate", 0.01, "Learning rate")
-flags.DEFINE_boolean("sync_replicas", False,
+flags.DEFINE_boolean("sync_replicas", True,
                      "Use the sync_replicas (synchronized replicas) mode, "
                      "wherein the parameter updates from workers are aggregated "
                      "before applied to avoid stale gradients")
@@ -197,7 +197,7 @@ def main(unused_argv):
       sync_init_op = opt.get_init_tokens_op()
 
     init_op = tf.global_variables_initializer()
-    train_dir = tempfile.mkdtemp()
+    train_dir = tempfile.mkdtemp(dir="/mnt")
 
     if FLAGS.sync_replicas:
       sv = tf.train.Supervisor(
