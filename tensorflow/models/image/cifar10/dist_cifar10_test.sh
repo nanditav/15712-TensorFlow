@@ -117,7 +117,7 @@ echo "SYNC_REPLICAS_FLAG = ${SYNC_REPLICAS_FLAG}"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PY_DIR=$(dirname "${DIR}")/python
 
-MNIST_REPLICA="${PY_DIR}/mnist_replica.py"
+MNIST_REPLICA="cifar10_replica.py"
 
 WKR_LOG_PREFIX="/tmp/worker"
 PS_LOG_PREFIX="/tmp/ps"
@@ -126,15 +126,15 @@ PS_LOG_PREFIX="/tmp/ps"
 # during data downloading
 
 # Pre-download data files.
-timeout ${TIMEOUT} python "${MNIST_REPLICA}" \
-    --ps_hosts="${PS_HOSTS}" \
-    --worker_hosts="${WORKER_HOSTS}" \
-    --job_name="worker" \
-    --task_index=0 \
-    --num_gpus=${N_GPUS} \
-    --sync_replicas=${SYNC_REPLICAS_FLAG} \
-    --download_only || \
-    die "Download-only step of MNIST replica FAILED"
+#timeout ${TIMEOUT} python "${MNIST_REPLICA}" \
+#    --ps_hosts="${PS_HOSTS}" \
+#    --worker_hosts="${WORKER_HOSTS}" \
+#    --job_name="worker" \
+#    --task_index=0 \
+#    --num_gpus=${N_GPUS} \
+#    --sync_replicas=${SYNC_REPLICAS_FLAG} \
+#    --download_only || \
+#    die "Download-only step of MNIST replica FAILED"
 
 
 # Get N_PS by PS_HOSTS
