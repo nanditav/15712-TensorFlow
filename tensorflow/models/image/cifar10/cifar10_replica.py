@@ -150,6 +150,7 @@ def main(unused_argv):
           worker_device=worker_device,
           ps_device="/job:ps/cpu:0",
           cluster=cluster)):
+    cifar10.maybe_download_and_extract()
     global_step = tf.Variable(0, name="global_step", trainable=False)
 
     # # Variables of the hidden layer
