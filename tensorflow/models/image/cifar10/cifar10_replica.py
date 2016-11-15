@@ -100,9 +100,10 @@ IMAGE_PIXELS = 28
 
 def main(unused_argv):
   #mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
-  #if FLAGS.download_only:
-  #  sys.exit(0)
   cifar10.maybe_download_and_extract()
+  if FLAGS.download_only:
+    sys.exit(0)
+  #cifar10.maybe_download_and_extract()
   if FLAGS.job_name is None or FLAGS.job_name == "":
     raise ValueError("Must specify an explicit `job_name`")
   if FLAGS.task_index is None or FLAGS.task_index =="":
@@ -196,8 +197,23 @@ def main(unused_argv):
 
     # Build the summary operation based on the TF collection of Summaries.
     summary_op = tf.merge_all_summaries();
+    # Variables that affect learning rate.
+    num_batches_per_epoch = 50000 / FLAGS.batch_size
+    decay_steps = int(num_batches_per_epoch * 350)
+
+    # Decay the learning rate exponentially based on the number of steps.
+    lr = tf.train.exponential_decay(0.1,
+                                    global_step,
+                                    decay_steps,
+                                    0.1,
+                                    staircase=True)
+
+    # Generate moving averages of all losses and associated summaries.
+    #loss_averages_op = _add_loss_summaries(total_loss)
+
+    opt = tf.train.GradientDescentOptimizer(lr)
     
-    opt = tf.train.AdamOptimizer(FLAGS.learning_rate)
+    #opt = tf.train.AdamOptimizer(FLAGS.learning_rate)
 
     if FLAGS.sync_replicas:
       if FLAGS.replicas_to_aggregate is None:
@@ -209,7 +225,7 @@ def main(unused_argv):
           opt,
           replicas_to_aggregate=replicas_to_aggregate,
           total_num_replicas=num_workers,
-          name="mnist_sync_replicas")
+          name="cifar10_sync_replicas")
 
     train_step = opt.minimize(loss, global_step=global_step)
 
@@ -277,31 +293,37 @@ def main(unused_argv):
     time_begin = time.time()
     print("Training begins @ %f" % time_begin)
 
-    for step in xrange(FLAGS.train_steps):
+    local_step = 0
+    while True:
       start_time = time.time()
-      _, loss_value = sess.run([train_op, loss])
+      _, step = sess.run([train_step, global_step])
       duration = time.time() - start_time
+      local_step += 1
+      #assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 
-      assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
+      #if step % 10 == 0:
+      #  num_examples_per_step = FLAGS.batch_size
+      #  examples_per_sec = num_examples_per_step / duration
+      #  sec_per_batch = float(duration)
+#	loss_value = 0
+ #       format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
+#                      'sec/batch)')
+#        print (format_str % (datetime.now(), local_step, loss_value,
+#                             examples_per_sec, sec_per_batch))
+      now = time.time()
+      print("%f: Worker %d: training step %d done (global step: %d)" % (now, FLAGS.task_index, local_step, step))
 
-      if step % 10 == 0:
-        num_examples_per_step = FLAGS.batch_size
-        examples_per_sec = num_examples_per_step / duration
-        sec_per_batch = float(duration)
+      if step >= FLAGS.train_steps:
+        break
 
-        format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
-                      'sec/batch)')
-        print (format_str % (datetime.now(), step, loss_value,
-                             examples_per_sec, sec_per_batch))
-
-      if step % 100 == 0:
-        summary_str = sess.run(summary_op)
-        summary_writer.add_summary(summary_str, step)
+      #if step % 100 == 0:
+      #  summary_str = sess.run(summary_op)
+      #  summary_writer.add_summary(summary_str, step)
 
       # Save the model checkpoint periodically.
-      if step % 1000 == 0 or (step + 1) == FLAGS.train_steps:
-        checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
-        saver.save(sess, checkpoint_path, global_step=step)
+      #if step % 1000 == 0 or (step + 1) == FLAGS.train_steps:
+      #  checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
+      #  saver.save(sess, checkpoint_path, global_step=step)
     # local_step = 0
     # while True:
     #   # Training feed
