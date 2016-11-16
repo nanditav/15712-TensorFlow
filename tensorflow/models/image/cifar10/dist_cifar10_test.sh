@@ -187,7 +187,7 @@ while true; do
       --job_name="worker" \
       --task_index=${IDX} \
       --num_gpus=${N_GPUS} \
-      --train_steps=500 \
+      --train_steps=10000 \
       --sync_replicas=${SYNC_REPLICAS_FLAG} 2>&1 | tee "${WKR_LOG_PREFIX}${IDX}.log" &
   echo "Worker ${IDX}: "
   echo "  WORKER HOST: ${WORKER_ARRAY[IDX]}"

@@ -213,6 +213,9 @@ def main(unused_argv):
           local_init_op=local_init_op,
 	  saver=saver,
           summary_op=summary_op,
+          save_summaries_secs=120, 
+          save_model_secs=600,
+          checkpoint_basename='model.ckpt', 
           ready_for_local_init_op=ready_for_local_init_op,
           recovery_wait_secs=1,
           global_step=global_step)
@@ -223,6 +226,9 @@ def main(unused_argv):
           init_op=init_op,
           saver=saver,
           summary_op=summary_op,
+          save_summaries_secs=120,  
+          save_model_secs=600,
+          checkpoint_basename='model.ckpt',
           recovery_wait_secs=1,
           global_step=global_step)
 
@@ -265,10 +271,10 @@ def main(unused_argv):
       _, step, loss_value = sess.run([train_step, global_step, loss])
       duration = time.time() - start_time
       local_step += 1
-      
-      if step % 10 == 0:
+      printf("Worker %d %d" % (FLAGS.task_index, local_step))
+      if local_step % 10 == 0:
         now = time.time()
-        print("%f: Worker %d: training step %d done (global step: %d) loss = %.2f" % (now, FLAGS.task_index, local_step, step, loss_value))
+        print("%f: Worker %d: training step %d done (global step: %d of %d) loss = %.2f \n" % (now, FLAGS.task_index, local_step, step, FLAGS.train_steps, loss_value))
 
       if step >= FLAGS.train_steps:
         break
