@@ -279,6 +279,9 @@ def main(unused_argv):
       if step >= FLAGS.train_steps:
         break
 
+      if sv.should_stop()
+	print('Stopped due to abort')
+	break
       # Save the model checkpoint periodically.
       #if step % 1000 == 0 or (step + 1) == FLAGS.train_steps:
       #  checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
@@ -288,7 +291,7 @@ def main(unused_argv):
     print("Training ends @ %f" % time_end)
     training_time = time_end - time_begin
     print("Training elapsed time: %f s" % training_time)
-
+    sv.stop()
     # Validation feed
     # val_feed = {x: mnist.validation.images, y_: mnist.validation.labels}
     # val_xent = sess.run(cross_entropy, feed_dict=val_feed)
