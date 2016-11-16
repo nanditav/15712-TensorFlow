@@ -279,7 +279,7 @@ def main(unused_argv):
       if step >= FLAGS.train_steps:
         break
 
-      if sv.should_stop()
+      if sv.should_stop():
 	print('Stopped due to abort')
 	break
       # Save the model checkpoint periodically.
