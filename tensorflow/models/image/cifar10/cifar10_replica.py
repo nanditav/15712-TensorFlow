@@ -50,13 +50,9 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 from tensorflow.models.image.cifar10 import cifar10
-#import tensorflow as tf
-#from tensorflow.examples.tutorials.mnist import input_data
 
 
 flags = tf.app.flags
-#flags.DEFINE_string("data_dir", "/mnt/mnist-data",
-#                   "Directory for storing mnist data")
 flags.DEFINE_boolean("download_only", False,
                      "Only perform downloading of data; Do not proceed to "
                      "session preparation, model definition or training")
@@ -75,7 +71,6 @@ flags.DEFINE_integer("hidden_units", 100,
                      "Number of units in the hidden layer of the NN")
 flags.DEFINE_integer("train_steps", 10000,
                      "Number of (global) training steps to perform")
-#flags.DEFINE_integer("batch_size", 100, "Training batch size")
 flags.DEFINE_float("learning_rate", 0.01, "Learning rate")
 flags.DEFINE_boolean("sync_replicas", True,
                      "Use the sync_replicas (synchronized replicas) mode, "
@@ -99,11 +94,9 @@ IMAGE_PIXELS = 28
 
 
 def main(unused_argv):
-  #mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
   cifar10.maybe_download_and_extract()
   if FLAGS.download_only:
     sys.exit(0)
-  #cifar10.maybe_download_and_extract()
   if FLAGS.job_name is None or FLAGS.job_name == "":
     raise ValueError("Must specify an explicit `job_name`")
   if FLAGS.task_index is None or FLAGS.task_index =="":
@@ -150,34 +143,7 @@ def main(unused_argv):
           worker_device=worker_device,
           ps_device="/job:ps/cpu:0",
           cluster=cluster)):
-    cifar10.maybe_download_and_extract()
     global_step = tf.Variable(0, name="global_step", trainable=False)
-
-    # # Variables of the hidden layer
-    # hid_w = tf.Variable(
-    #     tf.truncated_normal(
-    #         [IMAGE_PIXELS * IMAGE_PIXELS, FLAGS.hidden_units],
-    #         stddev=1.0 / IMAGE_PIXELS),
-    #     name="hid_w")
-    # hid_b = tf.Variable(tf.zeros([FLAGS.hidden_units]), name="hid_b")
-
-    # # Variables of the softmax layer
-    # sm_w = tf.Variable(
-    #     tf.truncated_normal(
-    #         [FLAGS.hidden_units, 10],
-    #         stddev=1.0 / math.sqrt(FLAGS.hidden_units)),
-    #     name="sm_w")
-    # sm_b = tf.Variable(tf.zeros([10]), name="sm_b")
-
-    # # Ops: located on the worker specified with FLAGS.task_index
-    # x = tf.placeholder(tf.float32, [None, IMAGE_PIXELS * IMAGE_PIXELS])
-    # y_ = tf.placeholder(tf.float32, [None, 10])
-
-    # hid_lin = tf.nn.xw_plus_b(x, hid_w, hid_b)
-    # hid = tf.nn.relu(hid_lin)
-
-    # y = tf.nn.softmax(tf.nn.xw_plus_b(hid, sm_w, sm_b))
-    # cross_entropy = -tf.reduce_sum(y_ * tf.log(tf.clip_by_value(y, 1e-10, 1.0)))
 
     # Get images and labels for CIFAR-10.
     images, labels = cifar10.distorted_inputs()
@@ -209,13 +175,8 @@ def main(unused_argv):
                                     0.1,
                                     staircase=True)
 
-    # Generate moving averages of all losses and associated summaries.
-    #loss_averages_op = _add_loss_summaries(total_loss)
-
     opt = tf.train.GradientDescentOptimizer(lr)
     
-    #opt = tf.train.AdamOptimizer(FLAGS.learning_rate)
-
     if FLAGS.sync_replicas:
       if FLAGS.replicas_to_aggregate is None:
         replicas_to_aggregate = num_workers
@@ -250,6 +211,8 @@ def main(unused_argv):
           logdir=train_dir,
           init_op=init_op,
           local_init_op=local_init_op,
+	  saver=saver,
+          summary_op=summary_op,
           ready_for_local_init_op=ready_for_local_init_op,
           recovery_wait_secs=1,
           global_step=global_step)
@@ -258,6 +221,8 @@ def main(unused_argv):
           is_chief=is_chief,
           logdir=train_dir,
           init_op=init_op,
+          saver=saver,
+          summary_op=summary_op,
           recovery_wait_secs=1,
           global_step=global_step)
 
@@ -297,49 +262,21 @@ def main(unused_argv):
     local_step = 0
     while True:
       start_time = time.time()
-      _, step = sess.run([train_step, global_step])
+      _, step, loss_value = sess.run([train_step, global_step, loss])
       duration = time.time() - start_time
       local_step += 1
-      #assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
-
-      #if step % 10 == 0:
-      #  num_examples_per_step = FLAGS.batch_size
-      #  examples_per_sec = num_examples_per_step / duration
-      #  sec_per_batch = float(duration)
-#	loss_value = 0
- #       format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
-#                      'sec/batch)')
-#        print (format_str % (datetime.now(), local_step, loss_value,
-#                             examples_per_sec, sec_per_batch))
-      now = time.time()
-      print("%f: Worker %d: training step %d done (global step: %d)" % (now, FLAGS.task_index, local_step, step))
+      
+      if step % 10 == 0:
+        now = time.time()
+        print("%f: Worker %d: training step %d done (global step: %d) loss = %.2f" % (now, FLAGS.task_index, local_step, step, loss_value))
 
       if step >= FLAGS.train_steps:
         break
-
-      #if step % 100 == 0:
-      #  summary_str = sess.run(summary_op)
-      #  summary_writer.add_summary(summary_str, step)
 
       # Save the model checkpoint periodically.
       #if step % 1000 == 0 or (step + 1) == FLAGS.train_steps:
       #  checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
       #  saver.save(sess, checkpoint_path, global_step=step)
-    # local_step = 0
-    # while True:
-    #   # Training feed
-    #   batch_xs, batch_ys = mnist.train.next_batch(FLAGS.batch_size)
-    #   train_feed = {x: batch_xs, y_: batch_ys}
-
-    #   _, step = sess.run([train_step, global_step], feed_dict=train_feed)
-    #   local_step += 1
-
-    #   now = time.time()
-    #   print("%f: Worker %d: training step %d done (global step: %d)" %
-    #         (now, FLAGS.task_index, local_step, step))
-
-    #   if step >= FLAGS.train_steps:
-    #     break
 
     time_end = time.time()
     print("Training ends @ %f" % time_end)
