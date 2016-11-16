@@ -266,6 +266,9 @@ def main(unused_argv):
     print("Training begins @ %f" % time_begin)
 
     local_step = 0
+    f = open('/mnt/output.log', 'w')
+    f.write("Training begins @ " + str(time_begin) +"\n")
+    f.close()
     while True:
       start_time = time.time()
       _, step, loss_value = sess.run([train_step, global_step, loss])
@@ -275,7 +278,10 @@ def main(unused_argv):
       if local_step % 10 == 0:
         now = time.time()
         print("%f: Worker %d: training step %d done (global step: %d of %d) loss = %.2f \n" % (now, FLAGS.task_index, local_step, step, FLAGS.train_steps, loss_value))
-
+        f = open('/mnt/output.log', 'a')
+        f.write(str(now) + " Worker " + str(FLAGS.task_index) + " LocalStep " + str(local_step) + " GlobalStep " + str(step) + " Loss " + str(loss_value) + "\n")
+        f.close()
+      
       if step >= FLAGS.train_steps:
         break
 
@@ -289,9 +295,12 @@ def main(unused_argv):
 
     time_end = time.time()
     print("Training ends @ %f" % time_end)
+    f = open('/mnt/output.log', 'a')
+    f.write("Training ends @ " + str(time_end) +"\n")
     training_time = time_end - time_begin
     print("Training elapsed time: %f s" % training_time)
-    sv.stop()
+    f.write("Training elapsed time: " + str(training_time) +" s\n")
+    f.close()
     # Validation feed
     # val_feed = {x: mnist.validation.images, y_: mnist.validation.labels}
     # val_xent = sess.run(cross_entropy, feed_dict=val_feed)
