@@ -47,7 +47,7 @@ for worker in range(args.num_workers):
 
 
 for worker in range(args.num_workers):
-    work_to_do = "cd tensorflow; git pull base; cd tensorflow/models/image/cifar10; python cifar10_replica.py --ps_hosts=" + ps_hosts + " --worker_hosts=" + worker_hosts + " --job_name=\"worker\" --task_index=" + str(worker) + " --num_gpus=0 --train_steps=10000 --sync_replicas=True &> /mnt/output.log &"
+    work_to_do = "cd tensorflow; git pull base; cd tensorflow/models/image/cifar10; python cifar10_replica.py --ps_hosts=" + ps_hosts + " --worker_hosts=" + worker_hosts + " --job_name=\"worker\" --task_index=" + str(worker) + " --num_gpus=0 --train_steps=10000 --sync_replicas=True &> /mnt/error.log &"
     print("Worker: " + str(worker))
     print("ssh -o StrictHostKeyChecking=no root@" + args.vm_name + "-" + str(worker) + " '" + str(work_to_do) +"'")
     os.system("ssh -o StrictHostKeyChecking=no root@" + args.vm_name + "-" + str(worker) + " '" + str(work_to_do) +"'")
