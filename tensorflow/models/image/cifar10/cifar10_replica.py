@@ -266,7 +266,7 @@ def main(unused_argv):
     print("Training begins @ %f" % time_begin)
 
     local_step = 0
-	last = 0
+    last = 0
     f = open('/mnt/output.log', 'w')
     f.write("Training begins @ " + str(time_begin) +"\n")
     f.close()
