@@ -266,6 +266,7 @@ def main(unused_argv):
     print("Training begins @ %f" % time_begin)
 
     local_step = 0
+	last = 0
     f = open('/mnt/output.log', 'w')
     f.write("Training begins @ " + str(time_begin) +"\n")
     f.close()
@@ -274,7 +275,6 @@ def main(unused_argv):
       _, step, loss_value = sess.run([train_step, global_step, loss])
       duration = time.time() - start_time
       local_step += 1
-      last = 0
       if local_step % 10 == 0:
         now = time.time()
         print("%f - %f - %f: Worker %d: training step %d done (global step: %d of %d) loss = %.2f \n" % (now, last, now - last, FLAGS.task_index, local_step, step, FLAGS.train_steps, loss_value))
