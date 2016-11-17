@@ -274,10 +274,11 @@ def main(unused_argv):
       _, step, loss_value = sess.run([train_step, global_step, loss])
       duration = time.time() - start_time
       local_step += 1
-      
+      last = 0
       if local_step % 10 == 0:
         now = time.time()
-        print("%f: Worker %d: training step %d done (global step: %d of %d) loss = %.2f \n" % (now, FLAGS.task_index, local_step, step, FLAGS.train_steps, loss_value))
+        print("%f: Worker %d: training step %d done (global step: %d of %d) loss = %.2f \n" % (now - last, FLAGS.task_index, local_step, step, FLAGS.train_steps, loss_value))
+	last = now
         f = open('/mnt/output.log', 'a')
         f.write(str(now) + " Worker " + str(FLAGS.task_index) + " LocalStep " + str(local_step) + " GlobalStep " + str(step) + " Loss " + str(loss_value) + "\n")
         f.close()
