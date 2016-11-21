@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Distributed MNIST training and validation, with model replicas.
+"""Distributed CIFAR-10 training and validation, with model replicas.
 
 A simple softmax model with one hidden layer is defined. The parameters
 (weights and biases) are located on two parameter servers (ps), while the
@@ -203,7 +203,7 @@ def main(unused_argv):
       sync_init_op = opt.get_init_tokens_op()
 
     init_op = tf.global_variables_initializer()
-    train_dir = tempfile.mkdtemp(dir="/mnt")
+    train_dir = tempfile.mkdtemp(dir="/mnt",suffix=None, prefix="cifar10_train")
 
     if FLAGS.sync_replicas:
       sv = tf.train.Supervisor(
@@ -266,10 +266,12 @@ def main(unused_argv):
     print("Training begins @ %f" % time_begin)
 
     local_step = 0
-    last = 0
+    num_examples_per_step = 128
     f = open('/mnt/output.log', 'w')
     f.write("Training begins @ " + str(time_begin) +"\n")
+    f.write("Duration\tWorker\tLocalStep\tGlobalStep\tLoss\tExamplesPerSec\n")
     f.close()
+    last = time_begin
     while True:
       start_time = time.time()
       _, step, loss_value = sess.run([train_step, global_step, loss])
@@ -277,10 +279,11 @@ def main(unused_argv):
       local_step += 1
       if local_step % 10 == 0:
         now = time.time()
-        print("%f: Worker %d: training step %d done (global step: %d of %d) loss = %.2f \n" % (now - last, FLAGS.task_index, local_step, step, FLAGS.train_steps, loss_value))
+        examples_per_sec = 10*num_examples_per_step/(now-last)
+        print("%f: Worker %d: training step %d done (global step: %d of %d) loss = %.2f examples_per_sec = %.2f \n" % (now - last, FLAGS.task_index, local_step, step, FLAGS.train_steps, loss_value, examples_per_sec))
 	last = now
         f = open('/mnt/output.log', 'a')
-        f.write(str(now) + " Worker " + str(FLAGS.task_index) + " LocalStep " + str(local_step) + " GlobalStep " + str(step) + " Loss " + str(loss_value) + "\n")
+        f.write(str(now-last) + "\t" + str(FLAGS.task_index) + "\t" + str(local_step) + "\t" + str(step) + "\t" + str(loss_value) + "\t"+str(examples_per_sec)+"\n")
         f.close()
       
       if step >= FLAGS.train_steps:
