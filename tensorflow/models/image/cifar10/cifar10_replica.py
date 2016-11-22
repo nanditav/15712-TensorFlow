@@ -160,7 +160,7 @@ def main(unused_argv):
     #train_op = cifar10.train(loss, global_step)
 
     # Create a saver.
-    saver = tf.train.Saver(tf.global_variables())
+    saver = tf.train.Saver(tf.global_variables(), max_to_keep=None)
 
     # Build the summary operation based on the TF collection of Summaries.
     summary_op = tf.merge_all_summaries();
@@ -203,7 +203,7 @@ def main(unused_argv):
       sync_init_op = opt.get_init_tokens_op()
 
     init_op = tf.global_variables_initializer()
-    train_dir = tempfile.mkdtemp(dir="/mnt",suffix=None, prefix="cifar10_train")
+    train_dir = tempfile.mkdtemp(dir="/mnt",suffix="data", prefix="cifar10_train")
 
     if FLAGS.sync_replicas:
       sv = tf.train.Supervisor(
@@ -211,7 +211,7 @@ def main(unused_argv):
           logdir=train_dir,
           init_op=init_op,
           local_init_op=local_init_op,
-	  saver=saver,
+	  saver=None,
           summary_op=summary_op,
           save_summaries_secs=120, 
           save_model_secs=600,
@@ -224,7 +224,7 @@ def main(unused_argv):
           is_chief=is_chief,
           logdir=train_dir,
           init_op=init_op,
-          saver=saver,
+          saver=None,
           summary_op=summary_op,
           save_summaries_secs=120,  
           save_model_secs=600,
@@ -295,8 +295,7 @@ def main(unused_argv):
       # Save the model checkpoint periodically.
       if is_chief and (step % 1000 == 0 or (step + 1) == FLAGS.train_steps):
         print('Taking a Checkpoint @ Global Step '+str(step))
-        checkpoint_file = "/mnt/model"+str(step)+".ckpt"
-        checkpoint_path = os.path.join(checkpoint_file)
+        checkpoint_path = os.path.join("/mnt","model.ckpt")
         saver.save(sess, checkpoint_path, global_step=step)
 
     time_end = time.time()
