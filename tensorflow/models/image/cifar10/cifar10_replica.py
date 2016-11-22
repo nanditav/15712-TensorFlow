@@ -293,9 +293,11 @@ def main(unused_argv):
 	print('Stopped due to abort')
 	break
       # Save the model checkpoint periodically.
-      #if step % 1000 == 0 or (step + 1) == FLAGS.train_steps:
-      #  checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
-      #  saver.save(sess, checkpoint_path, global_step=step)
+      if is_chief and (step % 1000 == 0 or (step + 1) == FLAGS.train_steps):
+        print('Taking a Checkpoint @ Global Step '+str(step))
+        checkpoint_file = "/mnt/model"+str(step)+".ckpt"
+        checkpoint_path = os.path.join(checkpoint_file)
+        saver.save(sess, checkpoint_path, global_step=step)
 
     time_end = time.time()
     print("Training ends @ %f" % time_end)
