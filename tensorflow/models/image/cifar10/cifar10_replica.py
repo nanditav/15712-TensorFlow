@@ -295,7 +295,11 @@ def main(unused_argv):
       # Save the model checkpoint periodically.
       if is_chief and (step % 1000 == 0 or (step + 1) == FLAGS.train_steps):
         print('Taking a Checkpoint @ Global Step '+str(step))
-        checkpoint_path = os.path.join("/mnt","model.ckpt")
+        checkpoint_dir = "/mnt/checkpoint"+str(step) 
+        if tf.gfile.Exists(checkpoint_dir):
+    	   tf.gfile.DeleteRecursively(checkpoint_dir)
+        tf.gfile.MakeDirs(checkpoint_dir)
+        checkpoint_path = os.path.join(checkpoint_dir,"model.ckpt")
         saver.save(sess, checkpoint_path, global_step=step)
 
     time_end = time.time()
