@@ -63,7 +63,7 @@ tf.app.flags.DEFINE_integer('checkpointing_step', 1000,
                             """checkpointing step size""")
 
 
-def eval_once(saver, summary_writer, top_k_op, summary_op, step):
+def eval_once(saver, summary_writer, top_k_op, summary_op, ckpt_step):
   """Run Eval once.
 
   Args:
@@ -73,7 +73,7 @@ def eval_once(saver, summary_writer, top_k_op, summary_op, step):
     summary_op: Summary op.
   """
   with tf.Session() as sess:
-    checkpoint_directory = FLAGS.checkpoint_dir + str(step) 
+    checkpoint_directory = FLAGS.checkpoint_dir + str(ckpt_step) 
     ckpt = tf.train.get_checkpoint_state(checkpoint_directory)
     if ckpt and ckpt.model_checkpoint_path:
       # Restores from checkpoint
@@ -105,7 +105,10 @@ def eval_once(saver, summary_writer, top_k_op, summary_op, step):
 
       # Compute precision @ 1.
       precision = true_count / total_sample_count
-      print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
+      f = open('/mnt/eval_output.log', 'a')
+      f.write(str(ckpt_step)+"\t"+str(precision)+"\n")
+      f.close()
+      print('%s: precision @ step %d = %.3f' % (datetime.now(), ckpt_step, precision))
 
       summary = tf.Summary()
       summary.ParseFromString(sess.run(summary_op))
@@ -120,6 +123,9 @@ def eval_once(saver, summary_writer, top_k_op, summary_op, step):
 
 def evaluate():
   """Eval CIFAR-10 for a number of steps."""
+  f = open('/mnt/eval_output.log', 'w')
+  f.write("TrainingStep\tPrecision\n")
+  f.close()
   with tf.Graph().as_default() as g:
     # Get images and labels for CIFAR-10.
     eval_data = FLAGS.eval_data == 'test'
