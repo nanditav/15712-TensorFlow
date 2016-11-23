@@ -86,6 +86,10 @@ flags.DEFINE_string("ps_hosts","localhost:2222",
 flags.DEFINE_string("worker_hosts", "localhost:2223,localhost:2224",
                     "Comma-separated list of hostname:port pairs")
 flags.DEFINE_string("job_name", None,"job name: worker or ps")
+flags.DEFINE_integer("checkpoint_restore", 0,
+                     "Checkpoint Step to Restore from")
+flags.DEFINE_string("checkpoint_dir", '/mnt/checkpoint',"job name: worker or ps")
+
 
 FLAGS = flags.FLAGS
 
@@ -261,14 +265,30 @@ def main(unused_argv):
       sess.run(sync_init_op)
       sv.start_queue_runners(sess, [chief_queue_runner])
 
+    # Restore from Checkpoint
+    if FLAGS.checkpoint_restore > 0:
+      checkpoint_directory = FLAGS.checkpoint_dir + str(FLAGS.checkpoint_restore)
+      ckpt = tf.train.get_checkpoint_state(checkpoint_directory)
+      if ckpt and ckpt.model_checkpoint_path:
+        # Restores from checkpoint
+        saver.restore(sess, ckpt.model_checkpoint_path)
+        # Assuming model_checkpoint_path looks something like:
+        #   /my-favorite-path/cifar10_train/model.ckpt-0,
+        # extract global_step from it.
+        global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+      else:
+        print('No checkpoint file found')
+        return
+
+
     # Perform training
     time_begin = time.time()
     print("Training begins @ %f" % time_begin)
 
     local_step = 0
     num_examples_per_step = 128
-    f = open('/mnt/output.log', 'w')
-    f.write("Training begins @ " + str(time_begin) +"\n")
+    f = open('/mnt/train_output.log', 'w')
+    #f.write("Training begins @ " + str(time_begin) +"\n")
     f.write("Duration\tWorker\tLocalStep\tGlobalStep\tLoss\tExamplesPerSec\n")
     f.close()
     last = time_begin
@@ -280,9 +300,9 @@ def main(unused_argv):
       if local_step % 10 == 0:
         now = time.time()
         examples_per_sec = 10*num_examples_per_step/(now-last)
-        print("%f: Worker %d: training step %d done (global step: %d of %d) loss = %.2f examples_per_sec = %.2f \n" % (now - last, FLAGS.task_index, local_step, step, FLAGS.train_steps, loss_value, examples_per_sec))
+        print("%f: Worker %d: step %d (global step: %d of %d) loss = %.2f examples_per_sec = %.2f \n" % (now - last, FLAGS.task_index, local_step, step, FLAGS.train_steps, loss_value, examples_per_sec))
 	last = now
-        f = open('/mnt/output.log', 'a')
+        f = open('/mnt/train_output.log', 'a')
         f.write(str(now-last) + "\t" + str(FLAGS.task_index) + "\t" + str(local_step) + "\t" + str(step) + "\t" + str(loss_value) + "\t"+str(examples_per_sec)+"\n")
         f.close()
       
@@ -304,8 +324,8 @@ def main(unused_argv):
 
     time_end = time.time()
     print("Training ends @ %f" % time_end)
-    f = open('/mnt/output.log', 'a')
-    f.write("Training ends @ " + str(time_end) +"\n")
+    f = open('/mnt/train_output.log', 'a')
+    #f.write("Training ends @ " + str(time_end) +"\n")
     training_time = time_end - time_begin
     print("Training elapsed time: %f s" % training_time)
     f.write("Training elapsed time: " + str(training_time) +" s\n")
