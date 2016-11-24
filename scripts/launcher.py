@@ -23,9 +23,10 @@ num_sync = args.num_sync
 train_steps = args.train_steps
 
 # creating the vms for ps and workers
-create_cmd = 'tashi createMany --basename ' + name + ' --cores 8 --memory 8192 --disks 15712-ubuntu-15.10-server-amd64.qcow2,ext3-900GB.qcow2 --count ' + str(num_workers + num_ps)
+create_cmd = 'tashi createMany --basename ' + name + ' --cores 8 --memory 8192 --disks tensorflow15712 --count ' \
++ str(num_workers + num_ps) + ' --hints nicModel=e1000'
 subprocess.call('ssh tashi "' + create_cmd + '"',shell=True)
-subprocess.call('ssh tashi "tashi getMyInstances"',shell=True)
+#subprocess.call('ssh tashi "tashi getMyInstances"',shell=True)
 
 # allow time for the above vms to boot
 time.sleep(10)
@@ -57,8 +58,8 @@ for i in range(num_ps):
         + ps_str + ' --worker_hosts=' + workers_str + ' --job_name="ps" --task_index=' + str(i) + \
         ' --num_gpus=0 --train_steps=' + str(train_steps) + ' --sync_replicas=True --replicas_to_aggregate=' + str(num_sync)
         # finally launching the ps instances
-        subprocess.call('ssh root@' + name + '-' + str(i) + ' "python ' + comm_ps + ' >> ' + name + '_out.txt" &',shell=True)
-        print('ssh root@' + name + '-' + str(i) + ' "python ' + comm_ps + ' >> ' + name + '_out.txt 2>> ' + name + '_stderr.txt" &')
+        subprocess.call('ssh root@' + name + '-' + str(i) + ' "nohup python ' + comm_ps + ' >> ' + name + '_out.txt 2>> ' + name + '_stderr.txt &"',shell=True)
+        print('ssh root@' + name + '-' + str(i) + ' "nohup python ' + comm_ps + ' >> ' + name + '_out.txt 2>> ' + name + '_stderr.txt &"')
         time.sleep(3) #give time to launch the command
         subprocess.call('echo "launched a ps"',shell=True)
 
@@ -73,8 +74,8 @@ for i in range(num_workers):
         + ps_str + ' --worker_hosts=' + workers_str + ' --job_name="worker" --task_index=' + str(i) + \
         ' --num_gpus=0 --train_steps=' + str(train_steps) + ' --sync_replicas=True --replicas_to_aggregate=' + str(num_sync)
         # finally launching the worker instances        
-        subprocess.call('ssh root@' + name + '-' + str(i+num_ps) + ' "python ' + comm_worker + ' >> ' + name + '_out.txt 2>> ' + name + '_stderr.txt" &',shell=True)
-        print('ssh root@' + name + '-' + str(i+num_ps) + ' "python ' + comm_worker + ' >> ' + name + '_out.txt" &')
+        subprocess.call('ssh root@' + name + '-' + str(i+num_ps) + ' "nohup python ' + comm_worker + ' >> ' + name + '_out.txt 2>> ' + name + '_stderr.txt &"',shell=True)
+        print('ssh root@' + name + '-' + str(i+num_ps) + ' "nohup python ' + comm_worker + ' >> ' + name + '_out.txt 2>> ' + name + '_stderr.txt &"')
         time.sleep(3) #give time to launch the command
         subprocess.call('echo "launched a worker"',shell=True)
 
