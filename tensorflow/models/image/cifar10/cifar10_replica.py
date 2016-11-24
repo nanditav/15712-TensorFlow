@@ -275,7 +275,7 @@ def main(unused_argv):
         # Assuming model_checkpoint_path looks something like:
         #   /my-favorite-path/cifar10_train/model.ckpt-0,
         # extract global_step from it.
-        global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+        #global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
       else:
         print('No checkpoint file found')
         return
@@ -313,7 +313,8 @@ def main(unused_argv):
 	print('Stopped due to abort')
 	break
       # Save the model checkpoint periodically.
-      if is_chief and (step % 1000 == 0 or (step + 1) == FLAGS.train_steps):
+      #if is_chief and (step % 1000 == 0 or (step + 1) == FLAGS.train_steps):
+      if (step % 1000 == 0 or (step + 1) == FLAGS.train_steps):
         print('Taking a Checkpoint @ Global Step '+str(step))
         checkpoint_dir = "/mnt/checkpoint"+str(step) 
         if tf.gfile.Exists(checkpoint_dir):
