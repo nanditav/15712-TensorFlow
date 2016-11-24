@@ -301,10 +301,10 @@ def main(unused_argv):
         now = time.time()
         examples_per_sec = 10*num_examples_per_step/(now-last)
         print("%f: Worker %d: step %d (global step: %d of %d) loss = %.2f examples_per_sec = %.2f \n" % (now - last, FLAGS.task_index, local_step, step, FLAGS.train_steps, loss_value, examples_per_sec))
-	last = now
         f = open('/mnt/train_output.log', 'a')
         f.write(str(now-last) + "\t" + str(FLAGS.task_index) + "\t" + str(local_step) + "\t" + str(step) + "\t" + str(loss_value) + "\t"+str(examples_per_sec)+"\n")
         f.close()
+        last = now
       
       if step >= FLAGS.train_steps:
         break
