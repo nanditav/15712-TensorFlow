@@ -194,6 +194,7 @@ def main(unused_argv):
           name="cifar10_sync_replicas")
 
     train_step = opt.minimize(loss, global_step=global_step)
+    train_step2 = opt.minimize(loss, global_step=global_step)
 
     if FLAGS.sync_replicas:
       local_init_op = opt.local_step_init_op
@@ -294,7 +295,10 @@ def main(unused_argv):
     last = time_begin
     while True:
       start_time = time.time()
-      _, step, loss_value = sess.run([train_step, global_step, loss])
+      if local_step % 10 == 0:
+      	_, step, loss_value = sess.run([train_step, global_step, loss])
+      else:
+      	_, step, loss_value = sess.run([train_step2, global_step, loss])
       duration = time.time() - start_time
       local_step += 1
       if local_step % 10 == 0:
