@@ -194,7 +194,7 @@ def main(unused_argv):
           name="cifar10_sync_replicas")
 
     train_step = opt.minimize(loss, global_step=global_step)
-    train_step2 = opt.minimize(loss, global_step=global_step)
+    #train_step2 = opt.minimize(loss, global_step=global_step)
 
     if FLAGS.sync_replicas:
       local_init_op = opt.local_step_init_op
