@@ -194,6 +194,7 @@ def main(unused_argv):
           name="cifar10_sync_replicas")
 
     train_step = opt.minimize(loss, global_step=global_step)
+    #train_step2 = opt.minimize(loss, global_step=global_step)
 
     if FLAGS.sync_replicas:
       local_init_op = opt.local_step_init_op
@@ -289,12 +290,15 @@ def main(unused_argv):
     num_examples_per_step = 128
     f = open('/mnt/train_output.log', 'w')
     #f.write("Training begins @ " + str(time_begin) +"\n")
-    f.write("Duration\tWorker\tLocalStep\tGlobalStep\tLoss\tExamplesPerSec\tTrainingTime\n")
+    f.write("Duration\tWorker\tLocalStep\tGlobalStep\tLoss\tExamplesPerSec\n")
     f.close()
     last = time_begin
     while True:
       start_time = time.time()
-      _, step, loss_value = sess.run([train_step, global_step, loss])
+      if local_step % 10 == 0:
+      	_, step, loss_value = sess.run([train_step, global_step, loss])
+      else:
+      	_, step, loss_value = sess.run([train_step, global_step, loss])
       duration = time.time() - start_time
       local_step += 1
       if local_step % 10 == 0:
@@ -302,7 +306,7 @@ def main(unused_argv):
         examples_per_sec = 10*num_examples_per_step/(now-last)
         print("%f: Worker %d: step %d (global step: %d of %d) loss = %.2f examples_per_sec = %.2f \n" % (now - last, FLAGS.task_index, local_step, step, FLAGS.train_steps, loss_value, examples_per_sec))
         f = open('/mnt/train_output.log', 'a')
-        f.write(str(now-last) + "\t" + str(FLAGS.task_index) + "\t" + str(local_step) + "\t" + str(step) + "\t" + str(loss_value) + "\t"+str(examples_per_sec)+"\t"+str(now-time_begin) +"\n")
+        f.write(str(now-last) + "\t" + str(FLAGS.task_index) + "\t" + str(local_step) + "\t" + str(step) + "\t" + str(loss_value) + "\t"+str(examples_per_sec)+"\n")
         f.close()
         last = now
       
