@@ -298,7 +298,7 @@ def main(unused_argv):
       if local_step % 10 == 0:
       	_, step, loss_value = sess.run([train_step, global_step, loss])
       else:
-      	_, step, loss_value = sess.run([train_step2, global_step, loss])
+      	_, step, loss_value = sess.run([train_step, global_step, loss])
       duration = time.time() - start_time
       local_step += 1
       if local_step % 10 == 0:
