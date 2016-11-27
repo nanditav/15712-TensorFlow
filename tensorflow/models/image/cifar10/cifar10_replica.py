@@ -115,6 +115,7 @@ def main(unused_argv):
 
   # Get the number of workers.
   num_workers = len(worker_spec)
+  num_ps = len(ps_spec)
 
   cluster = tf.train.ClusterSpec({
       "ps": ps_spec,
@@ -144,6 +145,7 @@ def main(unused_argv):
   # The ps use CPU and workers use corresponding GPU
   with tf.device(
       tf.train.replica_device_setter(
+          ps_tasks=num_ps,
           worker_device=worker_device,
           ps_device="/job:ps/cpu:0",
           cluster=cluster)):
