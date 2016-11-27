@@ -147,7 +147,7 @@ def main(unused_argv):
       tf.train.replica_device_setter(
           ps_tasks=num_ps,
           worker_device=worker_device,
-          ps_device="/job:ps/cpu:0",
+          #ps_device="/job:ps/cpu:0",
           cluster=cluster)):
     global_step = tf.Variable(0, name="global_step", trainable=False)
 
