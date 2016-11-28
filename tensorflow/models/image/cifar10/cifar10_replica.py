@@ -239,7 +239,7 @@ def main(unused_argv):
           global_step=global_step)
 
     sess_config = tf.ConfigProto(
-        allow_soft_placement=True,
+        allow_soft_placement=False,
         log_device_placement=False,
         device_filters=["/job:ps", "/job:worker/task:%d" % FLAGS.task_index])
 
