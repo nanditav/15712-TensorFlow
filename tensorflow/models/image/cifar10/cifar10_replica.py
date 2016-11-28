@@ -240,8 +240,8 @@ def main(unused_argv):
 
     sess_config = tf.ConfigProto(
         allow_soft_placement=True,
-        log_device_placement=False)#,
-        #device_filters=["/job:ps", "/job:worker/task:%d" % FLAGS.task_index])
+        log_device_placement=False,
+        device_filters=["/job:ps", "/job:worker/task:%d" % FLAGS.task_index])
 
     # The chief worker (task_index==0) session will prepare the session,
     # while the remaining workers will wait for the preparation to complete.
