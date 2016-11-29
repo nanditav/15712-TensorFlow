@@ -89,7 +89,9 @@ flags.DEFINE_string("job_name", None,"job name: worker or ps")
 flags.DEFINE_integer("checkpoint_restore", 0,
                      "Checkpoint Step to Restore from")
 flags.DEFINE_string("checkpoint_dir", '/mnt/checkpoint',"job name: worker or ps")
-
+flags.DEFINE_integer("approx_step", 1E9, "Steps after which to start approximation: If 1E9 then no approximations")
+flags.DEFINE_integer("approx_interval", 1E9, "Approximate every approx_interval steps: If 1E9 then no approximation intervals")
+flags.DEFINE_string("layers_to_train","conv2", "Comma-separated list of layers to approximate")
 
 FLAGS = flags.FLAGS
 
@@ -112,6 +114,10 @@ def main(unused_argv):
   #Construct the cluster and start the server
   ps_spec = FLAGS.ps_hosts.split(",")
   worker_spec = FLAGS.worker_hosts.split(",")
+
+  #Approximation Layers
+  approx_layers = FLAGS.ps_hosts.split(",")
+  len_approx_layers = len(approx_layers)
 
   # Get the number of workers.
   num_workers = len(worker_spec)
@@ -148,6 +154,7 @@ def main(unused_argv):
           ps_device="/job:ps/cpu:0",
           cluster=cluster)):
     global_step = tf.Variable(0, name="global_step", trainable=False)
+    #variables_to_update = tf.Placeholder(, name="variables_to_update")
 
     # Get images and labels for CIFAR-10.
     images, labels = cifar10.distorted_inputs()
@@ -193,8 +200,15 @@ def main(unused_argv):
           total_num_replicas=num_workers,
           name="cifar10_sync_replicas")
 
+    #trainable_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
     train_step = opt.minimize(loss, global_step=global_step)
-    #train_step2 = opt.minimize(loss, global_step=global_step)
+
+    # Approximation Training
+    var_list=[]
+    for i in range(len_approx_layers):
+      var_list = var_list + tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=approx_layers[i])]
+    
+    train_step_approx = opt.minimize(loss, global_step=global_step, var_list=var_list)
 
     if FLAGS.sync_replicas:
       local_init_op = opt.local_step_init_op
@@ -295,10 +309,10 @@ def main(unused_argv):
     last = time_begin
     while True:
       start_time = time.time()
-      if local_step % 10 == 0:
+      if local_step < FLAGS.approx_step:
       	_, step, loss_value = sess.run([train_step, global_step, loss])
       else:
-      	_, step, loss_value = sess.run([train_step, global_step, loss])
+      	_, step, loss_value = sess.run([train_step_approx, global_step, loss])
       duration = time.time() - start_time
       local_step += 1
       if local_step % 10 == 0:
