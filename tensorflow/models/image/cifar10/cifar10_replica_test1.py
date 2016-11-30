@@ -90,7 +90,7 @@ flags.DEFINE_integer("checkpoint_restore", 0,
                      "Checkpoint Step to Restore from")
 flags.DEFINE_string("checkpoint_dir", '/mnt/checkpoint',"job name: worker or ps")
 flags.DEFINE_integer("approx_step", 1E9, "Steps after which to start approximation: If 1E9 then no approximations")
-flags.DEFINE_integer("approx_interval", 1E9, "Approximate every approx_interval steps: If 1E9 then no approximation intervals")
+flags.DEFINE_integer("approx_interval", 1, "Approximate every approx_interval steps: If 1 then no approximation intervals, approximate every step")
 flags.DEFINE_string("layers_to_train","conv2", "Comma-separated list of layers to approximate")
 
 FLAGS = flags.FLAGS
@@ -116,7 +116,7 @@ def main(unused_argv):
   worker_spec = FLAGS.worker_hosts.split(",")
 
   #Approximation Layers
-  approx_layers = FLAGS.ps_hosts.split(",")
+  approx_layers = FLAGS.layers_to_train.split(",")
   len_approx_layers = len(approx_layers)
 
   # Get the number of workers.
@@ -206,7 +206,7 @@ def main(unused_argv):
     # Approximation Training
     var_list=[]
     for i in range(len_approx_layers):
-      var_list = var_list + tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=approx_layers[i])]
+      var_list = var_list + tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=approx_layers[i])
     
     train_step_approx = opt.minimize(loss, global_step=global_step, var_list=var_list)
 
@@ -312,7 +312,11 @@ def main(unused_argv):
       if local_step < FLAGS.approx_step:
       	_, step, loss_value = sess.run([train_step, global_step, loss])
       else:
-      	_, step, loss_value = sess.run([train_step_approx, global_step, loss])
+        if local_step % FLAGS.approx_interval == 0:
+          _, step, loss_value = sess.run([train_step_approx, global_step, loss])
+        else:
+          _, step, loss_value = sess.run([train_step, global_step, loss])
+
       duration = time.time() - start_time
       local_step += 1
       if local_step % 10 == 0:
