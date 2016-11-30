@@ -152,7 +152,8 @@ def main(unused_argv):
       tf.train.replica_device_setter(
           worker_device=worker_device,
           ps_device="/job:ps/cpu:0",
-          cluster=cluster)):
+          cluster=cluster
+          ps_strategy=tf.contrib.training.GreedyLoadBalancingStrategy)):
     global_step = tf.Variable(0, name="global_step", trainable=False)
     #variables_to_update = tf.Placeholder(, name="variables_to_update")
 
