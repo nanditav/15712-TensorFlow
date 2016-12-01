@@ -24,7 +24,7 @@ train_steps = args.train_steps
 
 # creating the vms for ps and workers
 create_cmd = 'tashi createMany --basename ' + name + ' --cores 8 --memory 4096 --disks tensorflow15712,ext3-900GB.qcow2 --count ' \
-+ str(num_workers + num_ps) + ' --hints nicModel=e1000'
++ str(1) + ' --hints nicModel=e1000'
 #TEMP: trying a nicModel of virtio instead of e1000
 subprocess.call('ssh tashi "' + create_cmd + '"',shell=True)
 subprocess.call('ssh tashi "tashi getMyInstances" > status.txt',shell=True)
