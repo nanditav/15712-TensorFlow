@@ -12,6 +12,10 @@ parser.add_argument("--num_parameter_servers", help="Specify number of parameter
 parser.add_argument("--async",help="Specify if the training should be done synchronously or not")
 parser.add_argument("--num_sync",help="If async=True, how many workers should be synchronously updated",type=int)
 parser.add_argument("--train_steps",help="Specify number of training steps",type=int)
+parser.add_argument("--approx_step",help="Step to start approximations",type=int)
+parser.add_argument("--approx_interval",help="Approximate every x steps",type=int)
+parser.add_argument("--layers_to_train",help="Comma separated list of cifar10 model layers",type=str)
+
 args = parser.parse_args()
 
 # setting up parameters
@@ -21,6 +25,9 @@ num_ps = args.num_parameter_servers
 async = args.async
 num_sync = args.num_sync
 train_steps = args.train_steps
+approx_step = args.approx_step
+approx_interval = args.approx_interval
+layers_to_train = args.layers_to_train
 
 # creating the vms for ps and workers
 create_cmd = 'tashi createMany --basename ' + name + ' --cores 8 --memory 8192 --disks tensorflow15712,ext3-900GB.qcow2 --count ' \
@@ -65,13 +72,14 @@ for i in range(num_workers):
 for i in range(num_ps):
         # tensorflow python args
         if async == 'False':
-                comm_ps = './tensorflow/models/image/cifar10/cifar10_replica.py --ps_hosts=' \
+                comm_ps = './tensorflow/models/image/cifar10/cifar10_replica_test1.py --ps_hosts=' \
         + ps_str + ' --worker_hosts=' + workers_str + ' --job_name="ps" --task_index=' + str(i) + \
-        ' --num_gpus=0 --train_steps=' + str(train_steps) + ' --sync_replicas=True'
+        ' --num_gpus=0 --train_steps=' + str(train_steps) + ' --sync_replicas=True'+' --approx_step=' str(approx_step)+' --approx_interval='+str(approx_interval)+' --layers_to_train='+str(layers_to_train)
         if async == 'True':
-                comm_ps = './tensorflow/models/image/cifar10/cifar10_replica.py --ps_hosts=' \
+                comm_ps = './tensorflow/models/image/cifar10/cifar10_replica_test1.py --ps_hosts=' \
         + ps_str + ' --worker_hosts=' + workers_str + ' --job_name="ps" --task_index=' + str(i) + \
-        ' --num_gpus=0 --train_steps=' + str(train_steps) + ' --sync_replicas=True --replicas_to_aggregate=' + str(num_sync)
+        ' --num_gpus=0 --train_steps=' + str(train_steps) + ' --sync_replicas=true --replicas_to_aggregate=' + str(num_sync)+' --approx_step='+str(approx_step)+' --approx_interval='+str(approx_interval)+' --layers_to_train='+str(layers_to_train)
+
 
         # commands to launch on each vm
         comm0 = 'export PATH=\"$PATH:$HOME/bin\";'
@@ -89,13 +97,13 @@ for i in range(num_ps):
 for i in range(num_workers):
         # tensorflow python args
         if async == 'False':
-                comm_worker = './tensorflow/models/image/cifar10/cifar10_replica.py --ps_hosts=' \
+                comm_worker = './tensorflow/models/image/cifar10/cifar10_replica_test1.py --ps_hosts=' \
         + ps_str + ' --worker_hosts=' + workers_str + ' --job_name="worker" --task_index=' + str(i) + \
-        ' --num_gpus=0 --train_steps=' + str(train_steps) + ' --sync_replicas=True'
+        ' --num_gpus=0 --train_steps=' + str(train_steps) + ' --sync_replicas=True' +' --approx_step='+str(approx_step)+' --approx_interval='+str(approx_interval)+' --layers_to_train='+str(layers_to_train)
         if async == 'True':
-                comm_worker = './tensorflow/models/image/cifar10/cifar10_replica.py --ps_hosts=' \
+                comm_worker = './tensorflow/models/image/cifar10/cifar10_replica_test1.py --ps_hosts=' \
         + ps_str + ' --worker_hosts=' + workers_str + ' --job_name="worker" --task_index=' + str(i) + \
-        ' --num_gpus=0 --train_steps=' + str(train_steps) + ' --sync_replicas=True --replicas_to_aggregate=' + str(num_sync)
+        ' --num_gpus=0 --train_steps=' + str(train_steps) + ' --sync_replicas=True --replicas_to_aggregate=' + str(num_sync) +' --approx_step='+str(approx_step)+' --approx_interval='+str(approx_interval)+' --layers_to_train='+str(layers_to_train)
 
         #commands to launch on each vm
         comm0 = 'export PATH=\"$PATH:$HOME/bin\";'
